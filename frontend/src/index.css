@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Manufacturing Theme - Updated Professional Colors */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 40%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 40%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 40%;
+
+    /* Primary Dark Purple */
+    --primary: 300 50% 40%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 300 50% 35%;
+
+    /* Secondary Gray */
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 40%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Accent Purple for Actions */
+    --accent: 300 50% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 98%;
+
+    /* Status Background Variants */
+    --planned: 300 100% 97%;
+    --planned-foreground: 300 50% 40%;
+    
+    --in-progress: 38 100% 97%;
+    --in-progress-foreground: 38 92% 25%;
+    
+    --completed: 142 100% 97%;
+    --completed-foreground: 142 76% 25%;
+    
+    --delayed: 0 100% 97%;
+    --delayed-foreground: 0 84% 40%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 300 50% 40%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 0 0% 40%;
+
+    --sidebar-primary: 300 50% 40%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 0 0% 95%;
+
+    --sidebar-accent-foreground: 0 0% 40%;
+
+    --sidebar-border: 0 0% 91%;
+
+    --sidebar-ring: 300 50% 40%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 300 50% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 300 50% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 300 50% 60%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 300 50% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 300 50% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
