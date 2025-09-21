@@ -1,4 +1,9 @@
-# Manufacturing Analytics Platform
+**********************************************************************************************************************************************************************
+
+Project Flow Video link - https://drive.google.com/drive/folders/1suXpE3a_qVVomADFETmXLxbV28w71znW?usp=drive_link
+
+**********************************************************************************************************************************************************************
+# Odoo Manufacturing Analytics Platform
 
 A modern manufacturing management and analytics dashboard built with React, Vite, TypeScript, and shadcn/ui. This project provides a full-featured frontend for managing manufacturing orders, BOMs, work orders, inventory, and advanced analytics, using static demo data for all modules except authentication.
 
