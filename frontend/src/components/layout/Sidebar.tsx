@@ -4,7 +4,8 @@ import {
   Wrench, 
   BarChart3, 
   FileText,
-  Home
+  Home,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const Sidebar = ({ activeSection, onSectionChange, isCollapsed: externalCollapse
     { id: "work-centers", label: "Work Centers", icon: Wrench },
     { id: "stock-ledger", label: "Stock Ledger", icon: BarChart3 },
     { id: "bom", label: "Bill of Materials", icon: FileText },
+    { id: "reports", label: "Reports & Analytics", icon: TrendingUp },
   ];
 
   return (

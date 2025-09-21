@@ -248,34 +248,100 @@ const createOrder = async (req, res) => {
 
     const { 
       bomId, 
+      productName,
       quantityToProduce, 
+      quantity,
       priority = 'normal', 
       scheduledStartDate, 
+      startDate,
       scheduledEndDate,
+      dueDate,
       assignedTo,
+      assignee, // Handle string assignee name
+      orderNumber,
+      status = 'planned',
       notes 
     } = req.body;
 
-    // Generate MO number
-    const moNumber = await generateMONumber(client);
+    console.log('Create order received data:', req.body);
 
-    // Get BOM details
-    const bomResult = await client.query(
-      'SELECT finished_product_id, bom_name FROM bills_of_materials WHERE bom_id = $1 AND is_active = true',
-      [bomId]
-    );
-
-    if (bomResult.rows.length === 0) {
-      throw new Error('BOM not found or inactive');
+    // Use provided values or defaults
+    const finalQuantity = quantityToProduce || quantity || 1;
+    
+    // Handle date conversion - convert empty strings to null
+    const convertDate = (dateValue) => {
+      if (!dateValue || dateValue === '' || dateValue === 'null') return null;
+      return dateValue;
+    };
+    
+    const finalStartDate = convertDate(scheduledStartDate || startDate);
+    const finalEndDate = convertDate(scheduledEndDate || dueDate);
+    
+    // Normalize status format (convert frontend hyphen format to backend underscore format)
+    const normalizeStatus = (status) => {
+      if (status === 'in-progress') return 'in_progress';
+      return status || 'planned';
+    };
+    const finalStatus = normalizeStatus(status);
+    
+    // Handle assignee - if string name provided, try to find user by name
+    let finalAssignedTo = assignedTo;
+    if (!finalAssignedTo && assignee && assignee.trim()) {
+      const [firstName, ...lastNameParts] = assignee.trim().split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      const userResult = await client.query(
+        'SELECT user_id FROM users WHERE first_name = $1 AND last_name = $2 AND is_active = true LIMIT 1',
+        [firstName, lastName]
+      );
+      
+      if (userResult.rows.length > 0) {
+        finalAssignedTo = userResult.rows[0].user_id;
+        console.log(`Found user ID ${finalAssignedTo} for assignee "${assignee}"`);
+      } else {
+        console.log(`No user found for assignee "${assignee}"`);
+      }
     }
 
-    const { finished_product_id, bom_name } = bomResult.rows[0];
+    // Generate MO number if not provided
+    const moNumber = orderNumber || await generateMONumber(client);
 
-    // Validate assigned user exists and has appropriate role
-    if (assignedTo) {
+    let finished_product_id = null;
+    let bom_name = productName || 'Custom Order';
+
+    // If BOM ID is provided, use the complex BOM flow
+    if (bomId) {
+      // Get BOM details
+      const bomResult = await client.query(
+        'SELECT finished_product_id, bom_name FROM bills_of_materials WHERE bom_id = $1 AND is_active = true',
+        [bomId]
+      );
+
+      if (bomResult.rows.length === 0) {
+        throw new Error('BOM not found or inactive');
+      }
+
+      finished_product_id = bomResult.rows[0].finished_product_id;
+      bom_name = bomResult.rows[0].bom_name;
+    } else if (productName) {
+      // Simple product-based order - try to find existing product
+      const productResult = await client.query(
+        'SELECT product_id FROM products WHERE product_name = $1 AND is_active = true LIMIT 1',
+        [productName]
+      );
+
+      if (productResult.rows.length > 0) {
+        finished_product_id = productResult.rows[0].product_id;
+      }
+      // If product doesn't exist, we'll create the order without product reference
+      // This allows for custom/ad-hoc manufacturing orders
+    }
+
+    // Validate assigned user exists and has appropriate role (if provided)
+    if (finalAssignedTo) {
       const userResult = await client.query(
         'SELECT user_id FROM users WHERE user_id = $1 AND is_active = true AND role IN ($2, $3, $4)',
-        [assignedTo, 'manufacturing_manager', 'operator', 'admin']
+        [finalAssignedTo, 'manufacturing_manager', 'operator', 'admin']
       );
 
       if (userResult.rows.length === 0) {
@@ -292,18 +358,21 @@ const createOrder = async (req, res) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING mo_id, mo_number
     `, [
-      moNumber, bomId, finished_product_id, quantityToProduce,
-      priority, scheduledStartDate, scheduledEndDate,
-      assignedTo, req.user.user_id, notes, 'planned'
+      moNumber, bomId, finished_product_id, finalQuantity,
+      priority, finalStartDate, finalEndDate,
+      finalAssignedTo, req.user.user_id, notes, finalStatus
     ]);
 
     const { mo_id, mo_number } = orderResult.rows[0];
 
-    // Create work orders from BOM operations
-    await createWorkOrdersFromBOM(client, mo_id, bomId, req.user.user_id);
+    // Only create complex work orders and material consumption if BOM is provided
+    if (bomId) {
+      // Create work orders from BOM operations
+      await createWorkOrdersFromBOM(client, mo_id, bomId, req.user.user_id);
 
-    // Create material consumption records
-    await createMaterialConsumption(client, mo_id, bomId, quantityToProduce, req.user.user_id);
+      // Create material consumption records
+      await createMaterialConsumption(client, mo_id, bomId, finalQuantity, req.user.user_id);
+    }
 
     await client.query('COMMIT');
 
@@ -311,12 +380,20 @@ const createOrder = async (req, res) => {
       success: true,
       message: 'Manufacturing order created successfully',
       data: { 
+        id: mo_id,
         mo_id, 
         mo_number,
+        orderNumber: mo_number,
         bom_name,
-        quantity_to_produce: quantityToProduce,
+        productName: bom_name,
+        quantity_to_produce: finalQuantity,
+        quantity: finalQuantity,
         priority,
-        status: 'planned'
+        status: finalStatus,
+        startDate: finalStartDate,
+        dueDate: finalEndDate,
+        assignee: assignedTo,
+        progress: 0
       }
     });
   } catch (error) {

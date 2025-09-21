@@ -51,8 +51,8 @@ const CreateOrderDialog = ({ open, onOpenChange, onCreateOrder }: CreateOrderDia
     const orderData = {
       ...formData,
       quantity: parseInt(formData.quantity),
-      startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",
-      dueDate: dueDate ? format(dueDate, "yyyy-MM-dd") : "",
+      startDate: startDate ? startDate.toISOString() : "",
+      dueDate: dueDate ? dueDate.toISOString() : "",
       progress: 0,
       orderNumber: `MO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
       id: String(Date.now()),

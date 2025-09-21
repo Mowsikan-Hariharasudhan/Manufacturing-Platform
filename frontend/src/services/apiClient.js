@@ -80,6 +80,13 @@ class ApiClient {
         throw new ApiError('Unauthorized', response.status, data);
       }
 
+      // For validation errors, include detailed error information
+      if (response.status === 400 && data?.errors) {
+        const detailedErrors = data.errors.map(err => `${err.field}: ${err.message}`).join(', ');
+        const errorMessage = `${data.message} - ${detailedErrors}`;
+        throw new ApiError(errorMessage, response.status, data);
+      }
+
       const errorMessage = data?.message || data?.error || `HTTP ${response.status}`;
       throw new ApiError(errorMessage, response.status, data);
     }

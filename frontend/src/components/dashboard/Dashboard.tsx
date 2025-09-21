@@ -10,7 +10,13 @@ import { OrderStatus } from "./StatusBadge";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { manufacturingOrdersService } from "@/services/dataServices";
+import { 
+  STATIC_MANUFACTURING_ORDERS, 
+  getOrdersSummary,
+  filterOrdersByStatus,
+  searchOrders,
+  type ManufacturingOrder as StaticManufacturingOrder 
+} from "@/data/staticData";
 
 const Dashboard = () => {
   const [orders, setOrders] = useState<ManufacturingOrder[]>([]);
@@ -23,32 +29,32 @@ const Dashboard = () => {
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const { toast } = useToast();
 
-  // Load manufacturing orders from backend
+  // Load manufacturing orders from static data
   useEffect(() => {
     const loadOrders = async () => {
       try {
         setLoading(true);
-        const response = await manufacturingOrdersService.getOrders();
         
-        if (response.success) {
-          // Transform backend data to match frontend interface
-          const transformedOrders: ManufacturingOrder[] = response.data.map((order: any) => ({
-            id: order.id.toString(),
-            orderNumber: order.orderNumber || `MO-${order.id.toString().padStart(6, '0')}`,
-            product: order.product?.name || order.productName || 'Unknown Product',
-            quantity: order.quantity || 0,
-            unit: order.unit || 'Units',
-            status: order.status as OrderStatus,
-            assignee: order.assignee || 'Unassigned',
-            startDate: order.startDate ? new Date(order.startDate).toLocaleDateString() : '',
-            dueDate: order.dueDate ? new Date(order.dueDate).toLocaleDateString() : '',
-            progress: order.progress || 0,
-            componentStatus: order.componentStatus || 'Unknown',
-          }));
-          setOrders(transformedOrders);
-        } else {
-          throw new Error(response.message || 'Failed to load orders');
-        }
+        // Transform static data to match frontend interface
+        const transformedOrders: ManufacturingOrder[] = STATIC_MANUFACTURING_ORDERS.map((order: StaticManufacturingOrder) => ({
+          id: order.mo_id,
+          orderNumber: order.mo_number,
+          product: order.finished_product,
+          quantity: order.quantity_to_produce,
+          unit: order.unit_of_measure,
+          status: (order.status === 'in_progress' ? 'in-progress' : order.status) as OrderStatus,
+          assignee: order.assigned_to_name,
+          startDate: order.scheduled_start_date ? new Date(order.scheduled_start_date).toLocaleDateString() : '',
+          dueDate: order.scheduled_end_date ? new Date(order.scheduled_end_date).toLocaleDateString() : '',
+          progress: order.completion_percentage,
+          componentStatus: order.componentStatus,
+        }));
+        setOrders(transformedOrders);
+        
+        // Simulate loading time for better UX
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
       } catch (error) {
         console.error('Failed to load manufacturing orders:', error);
         toast({
@@ -58,7 +64,6 @@ const Dashboard = () => {
         });
         // Fallback to empty array on error
         setOrders([]);
-      } finally {
         setLoading(false);
       }
     };
@@ -84,46 +89,22 @@ const Dashboard = () => {
 
   const handleNewOrderCreate = async (orderData: Omit<ManufacturingOrder, 'id'>) => {
     try {
-      // Transform frontend data to backend format
-      const backendOrderData = {
-        orderNumber: orderData.orderNumber,
-        productName: orderData.product,
-        quantity: orderData.quantity,
-        unit: orderData.unit || 'Units',
-        status: orderData.status,
-        assignee: orderData.assignee,
-        startDate: orderData.startDate,
-        dueDate: orderData.dueDate,
-        progress: orderData.progress || 0,
-        componentStatus: orderData.componentStatus || 'Unknown',
+      // Generate new ID for the order
+      const newId = `mo-${Date.now()}`;
+      const newOrder: ManufacturingOrder = {
+        ...orderData,
+        id: newId,
       };
-
-      const response = await manufacturingOrdersService.createOrder(backendOrderData);
       
-      if (response.success) {
-        // Transform backend response to frontend format
-        const transformedOrder: ManufacturingOrder = {
-          id: response.data.id.toString(),
-          orderNumber: response.data.orderNumber || `MO-${response.data.id.toString().padStart(6, '0')}`,
-          product: response.data.product?.name || response.data.productName || 'Unknown Product',
-          quantity: response.data.quantity || 0,
-          unit: response.data.unit || 'Units',
-          status: response.data.status as OrderStatus,
-          assignee: response.data.assignee || 'Unassigned',
-          startDate: response.data.startDate ? new Date(response.data.startDate).toLocaleDateString() : '',
-          dueDate: response.data.dueDate ? new Date(response.data.dueDate).toLocaleDateString() : '',
-          progress: response.data.progress || 0,
-          componentStatus: response.data.componentStatus || 'Unknown',
-        };
-
-        setOrders(prevOrders => [...prevOrders, transformedOrder]);
-        toast({
-          title: "Order Created",
-          description: response.message || `Manufacturing order ${transformedOrder.orderNumber} has been created successfully.`,
-        });
-      } else {
-        throw new Error(response.message || 'Failed to create order');
-      }
+      // Add to local state instead of API call
+      setOrders(prevOrders => [...prevOrders, newOrder]);
+      
+      toast({
+        title: "Success",
+        description: "Manufacturing order created successfully",
+      });
+      
+      setShowCreateOrder(false);
     } catch (error) {
       console.error('Failed to create manufacturing order:', error);
       toast({
@@ -149,6 +130,40 @@ const Dashboard = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="mt-2 text-muted-foreground">Loading manufacturing orders...</p>
           </div>
+        </div>
+      )}
+
+      {/* KPI Cards */}
+      {!loading && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <KPICard
+            title="Total Orders"
+            value={totalOrders}
+            change="+12% from last month"
+            changeType="positive"
+            icon={Package}
+          />
+          <KPICard
+            title="In Progress"
+            value={inProgressOrders}
+            change="+5% from last week"
+            changeType="positive"
+            icon={Clock}
+          />
+          <KPICard
+            title="Completed"
+            value={completedOrders}
+            change="Same as last week"
+            changeType="neutral"
+            icon={CheckCircle}
+          />
+          <KPICard
+            title="Delayed"
+            value={delayedOrders}
+            change="-8% from last month"
+            changeType="positive"
+            icon={AlertTriangle}
+          />
         </div>
       )}
 

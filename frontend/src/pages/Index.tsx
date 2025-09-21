@@ -7,6 +7,7 @@ import WorkOrdersPage from "@/components/work-orders/WorkOrdersPage";
 import WorkCentersPage from "@/components/work-centers/WorkCentersPage";
 import StockLedgerPage from "@/components/stock-ledger/StockLedgerPage";
 import BOMPage from "@/components/bom/BOMPage";
+import ReportsAnalyticsPage from "@/components/reports/ReportsAnalyticsPage";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -30,6 +31,8 @@ const Index = () => {
         return <StockLedgerPage />;
       case "bom":
         return <BOMPage />;
+      case "reports":
+        return <ReportsAnalyticsPage />;
       default:
         return <Dashboard />;
     }
