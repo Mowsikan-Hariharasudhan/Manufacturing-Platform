@@ -6,10 +6,10 @@ A modern manufacturing management and analytics dashboard built with React, Vite
 
 - **Authentication**: Secure login/register with role-based access
 - **Dashboard**: KPIs, order status, and quick insights
-- **Manufacturing Orders**: View, filter, and create orders (static data)
-- **BOM Management**: Bill of Materials explorer (static data)
-- **Work Orders & Centers**: Track operations and resources (static data)
-- **Stock Ledger**: Inventory and material tracking (static data)
+- **Manufacturing Orders**: View, filter, and create orders 
+- **BOM Management**: Bill of Materials explorer 
+- **Work Orders & Centers**: Track operations and resources 
+- **Stock Ledger**: Inventory and material tracking 
 - **Reports & Analytics**: Interactive charts, trends, and cost analysis
 - **Responsive UI**: Works on desktop, tablet, and mobile
 - **Modern Stack**: React 18, Vite, TypeScript, shadcn/ui, Recharts
@@ -46,8 +46,7 @@ frontend/
 			stock-ledger/
 			reports/
 			ui/
-		data/
-			staticData.ts      # Centralized static dummy data for all modules
+		
 		pages/
 			Index.tsx          # Main app shell and routing
 		context/
@@ -64,7 +63,7 @@ frontend/
 
 ## 🖌️ UI/UX
 
-- Built with [shadcn/ui](https://ui.shadcn.com/) for beautiful, accessible components
+- Built with MUI for beautiful, accessible components
 - Sidebar navigation for all modules
 - Tabbed analytics dashboard
 - Color-coded metrics and responsive layouts
